@@ -11,7 +11,7 @@ function createJiraTicket() {
 
   var issueSummary = subject;
   var sanitizedDescription = message.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-  var issueDescription =  "\nFull Name"+ fullName + "\nSent: " + timestamp +"\nContact #: " + contactNumber + "\nEmail Addess" + emailAddress + "\nMessage" + sanitizedDescription;
+  var issueDescription =  "\nFull Name: "+ fullName + "\nSent: " + timestamp +"\nContact #: " + contactNumber + "\nEmail Addess" + emailAddress + "\nMessage" + sanitizedDescription;
   var issueType = "Task";
 
   var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue";
