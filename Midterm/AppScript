@@ -1,0 +1,183 @@
+function createJiraTicket() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  var dataRange = sheet.getRange(lastRow, 1, 1, 7).getValues();
+  var timestamp = dataRange[0][0];
+  var emailAddress = dataRange[0][1];
+  var fullName = dataRange[0][2];
+  var contactNumber = dataRange[0][3];
+  var subject = dataRange[0][4];
+  var message = dataRange[0][5];
+
+  var issueSummary = subject;
+  var sanitizedDescription = message.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  var issueDescription = fullName + "\n" + timestamp +"\n" + contactNumber + "\n" + emailAddress + "\n" + sanitizedDescription;
+  var issueType = "Task";
+
+  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue";
+
+  var username = "karlcanielmagbanua.asi@gmail.com";
+  var apiToken = "ATATT3xFfGF0yg-MJP2kBAaKZLUNUSyUwF3bO4SqMTdEXBf0eNIHjaZQWA-9eKkm2Kuhqy7_GQmf-eiKn_fkX_zx7vmi-9qLv8VmPlY8GvQhU-umCBTW3qXmjX69T5DJvlvSpHBBbzqxBQXymdwFCbs-e6xoIIZBLqBijcAScqk4R33E9721HHA=607B78BF";
+
+  PropertiesService.getScriptProperties().setProperty('username', username);
+  PropertiesService.getScriptProperties().setProperty('apiToken', apiToken);
+
+
+  var payload = JSON.stringify({
+    "fields": {
+      "project": {
+        "key": "ASI"
+      },
+      "summary": issueSummary,
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": issueDescription
+              }
+            ]
+          }
+        ]
+      },
+      "issuetype": {
+        "name": issueType
+      }
+    }
+  });
+
+  var options = {
+    "method": "POST",
+    "headers": {
+      "Authorization": "Basic " + Utilities.base64Encode(username + ":" + apiToken),
+      "Content-Type": "application/json"
+    },
+    "payload": payload
+  };
+
+  var response = UrlFetchApp.fetch(apiUrl, options);
+  var responseData = JSON.parse(response.getContentText());
+  var ticketKey = responseData.key;
+  
+  PropertiesService.getScriptProperties().setProperty('ticketKey', ticketKey);
+  sheet.getRange(lastRow, 8).setValue(responseData.key);
+
+  triggerCheckStatus();
+}
+
+function triggerCheckStatus() {
+  var storedTicketKey = PropertiesService.getScriptProperties().getProperty('ticketKey');
+  var storedUsername = PropertiesService.getScriptProperties().getProperty('username');
+  var storedApiToken = PropertiesService.getScriptProperties().getProperty('apiToken');
+
+
+  var existingTriggers = ScriptApp.getProjectTriggers().filter(function(trigger) {
+    return trigger.getHandlerFunction() === 'getTicketStatus';
+  });
+  
+  if (existingTriggers.length === 0) {
+    ScriptApp.newTrigger('getTicketStatus')
+      .timeBased()
+      .everyMinutes(1)
+      .create();
+    
+    getTicketStatus(storedTicketKey, storedUsername, storedApiToken);
+  } else {
+  }
+}
+
+function getTicketStatus() {
+  var storedTicketKey = PropertiesService.getScriptProperties().getProperty('ticketKey');
+  var storedUsername = PropertiesService.getScriptProperties().getProperty('username');
+  var storedApiToken = PropertiesService.getScriptProperties().getProperty('apiToken');
+  Logger.log(storedTicketKey);
+  
+  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue/" + storedTicketKey;
+
+  var options = {
+    "method": "GET",
+    "headers": {
+      "Authorization": "Basic " + Utilities.base64Encode(storedUsername + ":" + storedApiToken),
+      "Content-Type": "application/json"
+    }
+  };
+
+  var response = UrlFetchApp.fetch(apiUrl, options);
+  var statusCode = response.getResponseCode();
+  var responseData = response.getContentText();
+  
+  if (statusCode == 200) {
+    var issueData = JSON.parse(responseData);
+    var status = issueData.fields.status.name;
+    Logger.log("Error: " + status);
+
+    if (status === "Done") {
+      getMostRecentComment();
+    }
+  } else {
+    Logger.log("Error: " + statusCode + " - " + responseData);
+  }
+}
+
+
+
+function getMostRecentComment() {
+  var storedTicketKey = PropertiesService.getScriptProperties().getProperty('ticketKey');
+  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue";
+
+  var username = "karlcanielmagbanua.asi@gmail.com";
+  var apiToken = "ATATT3xFfGF0yg-MJP2kBAaKZLUNUSyUwF3bO4SqMTdEXBf0eNIHjaZQWA-9eKkm2Kuhqy7_GQmf-eiKn_fkX_zx7vmi-9qLv8VmPlY8GvQhU-umCBTW3qXmjX69T5DJvlvSpHBBbzqxBQXymdwFCbs-e6xoIIZBLqBijcAScqk4R33E9721HHA=607B78BF";
+
+  var issueKey = storedTicketKey;
+
+  var apiUrlWithIssue = apiUrl + "/" + issueKey + "/comment";
+
+  var headers = {
+    "Authorization": "Basic " + Utilities.base64Encode(username + ":" + apiToken),
+    "Accept": "application/json"
+  };
+
+  var options = {
+    "method": "get",
+    "headers": headers
+  };
+
+  var response = UrlFetchApp.fetch(apiUrlWithIssue, options);
+  var responseData = JSON.parse(response.getContentText());
+  
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  var dataRange = sheet.getRange(lastRow, 1, 1, 7).getValues();
+  var toEmail = dataRange[0][1];
+  var comments = responseData.comments;
+  if (comments && comments.length > 0) {
+    var mostRecentComment = comments[comments.length - 1];
+    var commentBody = mostRecentComment.body.content[0].content[0].text;
+    var subject = "Jira Reply";
+    MailApp.sendEmail(toEmail, subject, commentBody);
+    sheet.getRange(lastRow, 9).setValue("Done");
+    stopTrigger();
+  } else {
+    return null;
+  }
+}
+
+
+
+function stopTrigger() {
+  var triggers = ScriptApp.getProjectTriggers();
+ 
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'getTicketStatus') {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+}
+
+
+
+
