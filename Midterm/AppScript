@@ -14,10 +14,10 @@ function createJiraTicket() {
   var issueDescription =  "\nFull Name: "+ fullName + "\nSent: " + timestamp +"\nContact #: " + contactNumber + "\nEmail Addess" + emailAddress + "\nMessage" + sanitizedDescription;
   var issueType = "Task";
 
-  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue";
+  var apiUrl = "https://-----------------.atlassian.net/rest/api/3/issue";
 
-  var username = "karlcanielmagbanua.asi@gmail.com";
-  var apiToken = "ATATT3xFfGF0yg-MJP2kBAaKZLUNUSyUwF3bO4SqMTdEXBf0eNIHjaZQWA-9eKkm2Kuhqy7_GQmf-eiKn_fkX_zx7vmi-9qLv8VmPlY8GvQhU-umCBTW3qXmjX69T5DJvlvSpHBBbzqxBQXymdwFCbs-e6xoIIZBLqBijcAScqk4R33E9721HHA=607B78BF";
+  var username = "sample@email.com";
+  var apiToken = "generateJiraToken";
 
   PropertiesService.getScriptProperties().setProperty('username', username);
   PropertiesService.getScriptProperties().setProperty('apiToken', apiToken);
@@ -96,7 +96,7 @@ function getTicketStatus() {
   var storedApiToken = PropertiesService.getScriptProperties().getProperty('apiToken');
   Logger.log(storedTicketKey);
   
-  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue/" + storedTicketKey;
+  var apiUrl = "https://-----------------.atlassian.net/rest/api/3/issue/" + storedTicketKey;
 
   var options = {
     "method": "GET",
@@ -127,10 +127,10 @@ function getTicketStatus() {
 
 function getMostRecentComment() {
   var storedTicketKey = PropertiesService.getScriptProperties().getProperty('ticketKey');
-  var apiUrl = "https://magbanuakarl-6asi.atlassian.net/rest/api/3/issue";
+  var apiUrl = "https://-----------------.atlassian.net/rest/api/3/issue";
 
-  var username = "karlcanielmagbanua.asi@gmail.com";
-  var apiToken = "ATATT3xFfGF0yg-MJP2kBAaKZLUNUSyUwF3bO4SqMTdEXBf0eNIHjaZQWA-9eKkm2Kuhqy7_GQmf-eiKn_fkX_zx7vmi-9qLv8VmPlY8GvQhU-umCBTW3qXmjX69T5DJvlvSpHBBbzqxBQXymdwFCbs-e6xoIIZBLqBijcAScqk4R33E9721HHA=607B78BF";
+  var username = "sample@email.com";
+  var apiToken = "generateJiraToken";
 
   var issueKey = storedTicketKey;
 
